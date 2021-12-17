@@ -1,6 +1,7 @@
 package fi.valtakausi.craftjs.plugin;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.CopyOption;
@@ -24,7 +25,6 @@ import org.bukkit.plugin.PluginLogger;
 
 import fi.valtakausi.craftjs.CraftJsMain;
 import fi.valtakausi.craftjs.api.CraftJsContext;
-
 public class JsPlugin extends PluginBase {
 	
 	public static JsPlugin createCraftJsCore(CraftJsMain craftjs) {
@@ -135,6 +135,15 @@ public class JsPlugin extends PluginBase {
 
 	@Override
 	public PluginDescriptionFile getDescription() {
+		// If plugin.yml exists, use it, else defaults.
+		if (rootDir.resolve("plugin.yml").toFile().exists()) {
+			try {
+				return new PluginDescriptionFile(new FileInputStream(rootDir.resolve("plugin.yml").toFile()));
+			} catch (Exception exception) {
+				return new PluginDescriptionFile(name, version, "");
+			}
+			
+		}
 		return new PluginDescriptionFile(name, version, "");
 	}
 
