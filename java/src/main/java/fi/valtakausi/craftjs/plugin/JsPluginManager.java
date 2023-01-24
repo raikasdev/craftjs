@@ -79,7 +79,6 @@ public class JsPluginManager {
 		if (!Files.exists(pluginsDir)) {
 			return; // Shouldn't happen, but if it does -> no plugins to load
 		}
-		
 		// Iterate over potential JS plugins
 		try {
 			Files.list(pluginsDir).forEach(path -> {

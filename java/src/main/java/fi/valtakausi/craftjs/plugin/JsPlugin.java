@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.PluginBase;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -25,6 +27,9 @@ import org.bukkit.plugin.PluginLogger;
 
 import fi.valtakausi.craftjs.CraftJsMain;
 import fi.valtakausi.craftjs.api.CraftJsContext;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 public class JsPlugin extends PluginBase {
 	
 	public static JsPlugin createCraftJsCore(CraftJsMain craftjs) {
@@ -93,8 +98,23 @@ public class JsPlugin extends PluginBase {
 	 */
 	private boolean enabled;
 
+	/**
+	 * Plugin.yml information
+	 */
+	private PluginDescriptionFile description;
+
 	JsPlugin(CraftJsMain craftjs, Path pluginFile, Path rootDir, String entrypoint, Path dataDir, String name, String version,
 			boolean internalApis) {
+		this.description = new PluginDescriptionFile(name, version, "");
+		// If plugin.yml exists, use it, else defaults.
+		if (Files.exists(rootDir.resolve("plugin.yml"))) {
+			try {
+				this.description = new PluginDescriptionFile(Files.newInputStream(rootDir.resolve("plugin.yml")));
+			} catch (Exception exception) {
+				this.description = new PluginDescriptionFile(name, version, "");
+			}
+		}
+
 		this.loader = craftjs.getJsLoader();
 		this.pluginPath = pluginFile;
 		this.rootDir = rootDir;
@@ -135,16 +155,7 @@ public class JsPlugin extends PluginBase {
 
 	@Override
 	public PluginDescriptionFile getDescription() {
-		// If plugin.yml exists, use it, else defaults.
-		if (rootDir.resolve("plugin.yml").toFile().exists()) {
-			try {
-				return new PluginDescriptionFile(new FileInputStream(rootDir.resolve("plugin.yml").toFile()));
-			} catch (Exception exception) {
-				return new PluginDescriptionFile(name, version, "");
-			}
-			
-		}
-		return new PluginDescriptionFile(name, version, "");
+		return description;
 	}
 
 	@Override
@@ -238,7 +249,7 @@ public class JsPlugin extends PluginBase {
 
 	@Override
 	public boolean isNaggable() {
-		return false; // TODO figure out what this does? found no documentation
+		return false; // TODO figure out what this does? found no documentation (Simple boolean if we can still nag to the logs about things)
 	}
 
 	@Override
@@ -248,6 +259,11 @@ public class JsPlugin extends PluginBase {
 
 	@Override
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
+		return null;
+	}
+
+	@Override
+	public @Nullable BiomeProvider getDefaultBiomeProvider(@NotNull String s, @Nullable String s1) {
 		return null;
 	}
 
