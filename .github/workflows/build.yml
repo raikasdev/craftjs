@@ -38,7 +38,7 @@ jobs:
         run: |
           mkdir plugins
           mv craftjs.jar plugins
-          wget -c https://papermc.io/api/v2/projects/paper/versions/1.19.3/builds/384/downloads/paper-1.19.3-184.jar -O paper.jar
+          wget -c https://papermc.io/api/v2/projects/paper/versions/1.19.3/builds/384/downloads/paper-1.19.3-384.jar -O paper.jar
       - name: Run tests
         run: |
           java -Dcom.mojang.eula.agree=true -Dcraftjs.runTests=craftjs-internal -jar paper.jar
