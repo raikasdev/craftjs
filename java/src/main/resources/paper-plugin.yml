@@ -7,4 +7,3 @@ dependencies:
     required: false
 load-after:
   - name: RealisticSeasons
-    bootstrap: false
