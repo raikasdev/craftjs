@@ -15,37 +15,37 @@ import org.bukkit.plugin.UnknownDependencyException;
 import fi.valtakausi.craftjs.CraftJsMain;
 
 public class JsPluginManager {
-	
+
 	/**
 	 * CraftJS plugin main.
 	 */
 	private final CraftJsMain craftjs;
-	
+
 	/**
 	 * CraftJS logger.
 	 */
 	private final Logger log;
-	
+
 	/**
 	 * The main plugin directory.
 	 */
 	private final Path pluginsDir;
-	
+
 	/**
 	 * Our plugin loader.
 	 */
 	private final JsPluginLoader loader;
-	
+
 	/**
 	 * Discovered plugins by their names. These are not all enabled!
 	 */
 	private final Map<String, JsPlugin> plugins;
-	
+
 	/**
 	 * CraftJS-internal plugins.
 	 */
 	private final Map<String, JsPlugin> internalPlugins;
-	
+
 	public JsPluginManager(CraftJsMain craftjs, Path pluginDir) {
 		this.craftjs = craftjs;
 		this.log = craftjs.getLogger();
@@ -54,16 +54,16 @@ public class JsPluginManager {
 		this.plugins = new HashMap<>();
 		this.internalPlugins = new HashMap<>();
 	}
-	
+
 	public JsPlugin getPlugin(String name) {
 		// Search both internal and normal plugins
 		return internalPlugins.getOrDefault(name, plugins.get(name));
 	}
-	
+
 	public void loadInternalPlugin(String name) {
 		// Load from CraftJS jar or override directory
 		Path rootDir = craftjs.getInternalPlugin(name);
-		
+
 		// Load it, wherever it is
 		try {
 			JsPlugin plugin = loader.loadPlugin(rootDir);
@@ -73,7 +73,7 @@ public class JsPluginManager {
 			throw new AssertionError("failed to load internal plugin: " + name, e);
 		}
 	}
-	
+
 	private void discoverPlugins() {
 		plugins.clear();
 		if (!Files.exists(pluginsDir)) {
@@ -84,7 +84,7 @@ public class JsPluginManager {
 			Files.list(pluginsDir).forEach(path -> {
 				JsPlugin plugin = discoverPlugin(path);
 				if (plugin != null) {
-					plugins.put(plugin.getName(), plugin);
+					plugins.put(plugin.getPluginMeta().getName(), plugin);
 				}
 			});
 		} catch (IOException e) {
@@ -92,7 +92,7 @@ public class JsPluginManager {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private JsPlugin discoverPlugin(Path path) {
 		if (!loader.isJsPlugin(path)) {
 			return null; // Not a (JS) plugin
@@ -110,33 +110,36 @@ public class JsPluginManager {
 		}
 		return null;
 	}
-	
+
 	private void enablePlugin(JsPlugin plugin) {
-		Bukkit.getPluginManager().enablePlugin(plugin);
+		plugin.setEnabled(true);
+		// Bukkit.getPluginManager().enablePlugin(plugin);
 	}
-	
+
 	public void enablePlugins() {
 		discoverPlugins();
 		for (JsPlugin plugin : plugins.values()) {
 			enablePlugin(plugin);
 		}
 	}
-	
+
 	public void reloadPlugins() {
 		// Disable everything
 		for (JsPlugin plugin : plugins.values()) {
-			Bukkit.getPluginManager().disablePlugin(plugin);
+			plugin.setEnabled(false);
+			// Bukkit.getPluginManager().disablePlugin(plugin);
 		}
 		discoverPlugins(); // Re-discover plugins and changes to them
 		enablePlugins(); // Enable the new plugins
 	}
-	
+
 	public boolean reloadPlugin(String name) {
 		// If found, disable and re-enable
 		JsPlugin plugin = plugins.get(name);
 		if (plugin != null) {
-			Bukkit.getPluginManager().disablePlugin(plugin);
-			
+			// Bukkit.getPluginManager().disablePlugin(plugin);
+			plugin.setEnabled(false);
+
 			// Remove and re-discover, package.json MIGHT have changed
 			plugins.remove(name);
 			plugin = discoverPlugin(pluginsDir.resolve(name));
@@ -153,7 +156,7 @@ public class JsPluginManager {
 				}
 				return false;
 			}
-			plugins.put(plugin.getName(), plugin);
+			plugins.put(plugin.getPluginMeta().getName(), plugin);
 			enablePlugin(plugin);
 		} else {
 			return false;
@@ -164,9 +167,9 @@ public class JsPluginManager {
 	public JsPluginLoader getPluginLoader() {
 		return loader;
 	}
-	
+
 	public Set<String> getPublicPlugins() {
 		return plugins.keySet();
 	}
-	
+
 }

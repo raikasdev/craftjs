@@ -22,7 +22,7 @@ import fi.valtakausi.craftjs.plugin.JsPluginLoader;
 import fi.valtakausi.craftjs.plugin.JsPluginManager;
 
 public class CraftJsMain extends JavaPlugin {
-		
+
 	private static final Context.Builder CONTEXT_BUILDER = makeContextBuilder();
 
 	private static Context.Builder makeContextBuilder() {
@@ -31,7 +31,7 @@ public class CraftJsMain extends JavaPlugin {
 				.targetTypeMapping(Number.class, Float.class, o -> o != null, Number::floatValue,
 						HostAccess.TargetMappingPrecedence.HIGHEST) // JS number -> float, with precision loss
 				.build();
-		
+
 		return Context.newBuilder("js")
 				.allowHostClassLookup(className -> true) // Allow loading all classes
 				.allowHostAccess(hostAccess)
@@ -41,27 +41,27 @@ public class CraftJsMain extends JavaPlugin {
 				.option("js.nashorn-compat", "true") // For native JS getter/setter compatibility
 				.option("js.ecmascript-version", "2021"); // Nashorn compat might default to old JS version
 	}
-	
+
 	/**
 	 * Zip file system of CraftJS jar.
 	 */
 	private FileSystem jarFs;
-	
+
 	/**
 	 * JS plugin manager.
 	 */
 	private JsPluginManager pluginManager;
-	
+
 	/**
 	 * Core pseudo-plugin that is loaded to every JS plugin context.
 	 */
 	private JsPlugin core;
-	
+
 	/**
 	 * Package lookup, to be exposed to core JS code.
 	 */
 	private PackageLookup packageLookup;
-	
+
 	@Override
 	public void onEnable() {
 		try {
@@ -73,45 +73,47 @@ public class CraftJsMain extends JavaPlugin {
 		pluginManager = new JsPluginManager(this, dir.getParent()); // Must exist before core is created
 		core = JsPlugin.createCraftJsCore(this);
 		packageLookup = PackageLookup.create(Bukkit.getPluginManager().getPlugins());
-		
+
 		// Load JS plugins
 		pluginManager.loadInternalPlugin("craftjs-internal");
 		pluginManager.enablePlugins();
 	}
-	
+
 	@Override
 	public File getFile() {
 		return super.getFile();
 	}
-	
+
 	/**
 	 * Creates a new Graal context and prepares it for
 	 * {@link #installCore(CraftJsContext)}.
-	 * @param context CraftJS context.
+	 * 
+	 * @param context      CraftJS context.
 	 * @param internalApis If internal APIs should be enabled.
 	 * @return GraalJS context.
 	 */
 	public Context newGraalContext(CraftJsContext context, boolean internalApis) {
 		Context ctx = CONTEXT_BUILDER.build();
 		Value bindings = ctx.getBindings("js");
-		
+
 		// Inject Java APIs that are not context-specific
 		bindings.putMember("__interop", new JavaInterop());
-		
+
 		// Prepare for evaluating CraftJS core
 		bindings.putMember("__craftjs", new DelegatingContext(this, core, context));
 		ctx.eval("js", "let exports = {};");
-		
+
 		// Enable internal APIs if requested
 		if (internalApis) {
 			bindings.putMember("__internals", new Internals(this));
 		}
-		
+
 		return ctx;
 	}
-	
+
 	/**
 	 * Installs core JS APIs to a CraftJS context.
+	 * 
 	 * @param context CraftJS context.
 	 */
 	public void installCore(CraftJsContext context) {
@@ -130,23 +132,24 @@ public class CraftJsMain extends JavaPlugin {
 			throw new AssertionError("core install failed");
 		}
 	}
-	
+
 	public JsPlugin getJsCore() {
 		return core;
 	}
-	
+
 	public JsPluginLoader getJsLoader() {
 		return pluginManager.getPluginLoader();
 	}
-	
+
 	public JsPluginManager getJsPluginManager() {
 		return pluginManager;
 	}
-	
+
 	/**
 	 * Gets path to root of internal CraftJS plugin. Normally, this will be
 	 * inside CraftJS jar. For development, it could be inside an override
 	 * directory in host file system.
+	 * 
 	 * @param name Internal plugin name.
 	 * @return Path to plugin root.
 	 */
@@ -158,11 +161,15 @@ public class CraftJsMain extends JavaPlugin {
 			return jarFs.getPath(name);
 		}
 	}
-	
+
 	public Path getDatabaseDir() {
 		return getDataFolder().toPath().resolve("databases");
 	}
-	
+
+	public Path getScriptsDir() {
+		return getDataFolder().toPath().resolve("scripts");
+	}
+
 	public PackageLookup getPackageLookup() {
 		return packageLookup;
 	}

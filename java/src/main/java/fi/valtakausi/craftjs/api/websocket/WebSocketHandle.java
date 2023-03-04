@@ -16,22 +16,22 @@ import org.java_websocket.framing.CloseFrame;
 import fi.valtakausi.craftjs.plugin.JsPlugin;
 
 public class WebSocketHandle {
-	
+
 	private static final BukkitScheduler SCHEDULER = Bukkit.getScheduler();
-	
+
 	private final JsPlugin ownerPlugin;
 	private ClientSocket socket;
-	
+
 	private final Consumer<WebSocketHandle> connectSuccess;
 	private final Consumer<Exception> connectError;
-	
+
 	private final Queue<String> receivedMessages;
 	private final Queue<Exception> receivedErrors;
 	private volatile ClosedStatus closedStatus;
-	
+
 	private final AtomicReference<ReceiveRequest> receiveRequest;
 	private final AtomicReference<Runnable> closeCallback;
-	
+
 	public WebSocketHandle(JsPlugin ownerPlugin, URI serverUri, Map<String, String> httpHeaders,
 			Consumer<WebSocketHandle> connectSuccess, Consumer<Exception> connectError) {
 		this.ownerPlugin = ownerPlugin;
@@ -44,13 +44,13 @@ public class WebSocketHandle {
 		this.receiveRequest = new AtomicReference<>(null);
 		this.closeCallback = new AtomicReference<>(null);
 	}
-	
+
 	public void connect() {
 		socket.connect();
 	}
-	
+
 	void connectFinished(Exception e) {
-		SCHEDULER.runTask(ownerPlugin, () -> {			
+		SCHEDULER.runTask(ownerPlugin.getPlugin(), () -> {
 			if (e == null) {
 				connectSuccess.accept(this);
 			} else {
@@ -58,46 +58,47 @@ public class WebSocketHandle {
 			}
 		});
 	}
-	
+
 	void queueMessage(String message) {
 		receivedMessages.add(message);
 		queueReceiveSync();
 	}
-	
+
 	void setClosed(ClosedStatus status) {
 		closedStatus = status;
 		queueReceiveSync();
 	}
-	
+
 	void queueError(Exception e) {
 		receivedErrors.add(e);
 		queueReceiveSync();
 	}
-	
+
 	private void queueReceiveSync() {
 		ReceiveRequest req = receiveRequest.getAndSet(null);
 		if (req != null) {
 			// Call the callbacks next tick in server thread
-			SCHEDULER.runTask(ownerPlugin, () -> handleReceive(req));
+			SCHEDULER.runTask(ownerPlugin.getPlugin(), () -> handleReceive(req));
 		}
 		Runnable callback = closeCallback.getAndSet(null);
 		if (callback != null) {
-			SCHEDULER.runTask(ownerPlugin, callback);
+			SCHEDULER.runTask(ownerPlugin.getPlugin(), callback);
 		}
 	}
 
-	
 	public void receive(Consumer<String> success, ClosedHandler closed, Consumer<Exception> error) {
 		ReceiveRequest request = new ReceiveRequest(success, closed, error);
 		if (!handleReceive(request)) {
-			// No messages or errors and not closed 
+			// No messages or errors and not closed
 			if (receiveRequest.getAndSet(request) != null) {
-				// Since we only keep one ReceiveRequest, this will lead to broken (never completed) promises
-				throw new IllegalStateException("multiple concurrent receive()s from WebSocket are not supported (did you forget to await?)");
+				// Since we only keep one ReceiveRequest, this will lead to broken (never
+				// completed) promises
+				throw new IllegalStateException(
+						"multiple concurrent receive()s from WebSocket are not supported (did you forget to await?)");
 			}
 		}
 	}
-	
+
 	private boolean handleReceive(ReceiveRequest req) {
 		// Allow polling all pending messages before calling closed or error handlers
 		String msg = receivedMessages.poll();
@@ -116,11 +117,11 @@ public class WebSocketHandle {
 			req.closed().closed(closedStatus.code(), closedStatus.reason(), closedStatus.remote());
 			return true;
 		}
-		
+
 		// Received nothing, try again later
 		return false;
 	}
-		
+
 	public List<Object> send(String msg) {
 		try {
 			socket.send(msg);
@@ -133,11 +134,11 @@ public class WebSocketHandle {
 			}
 		}
 	}
-	
+
 	public boolean isClosed() {
 		return closedStatus != null;
 	}
-	
+
 	public void close(String reason, Runnable callback) {
 		if (isClosed()) {
 			throw new IllegalArgumentException("already closed");

@@ -10,12 +10,12 @@ import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.plugin.Plugin;
 
 public class JsPluginCommand extends Command implements PluginIdentifiableCommand {
-	
+
 	@FunctionalInterface
 	public interface CommandHandler {
 		boolean handle(CommandSender sender, String alias, String[] args);
 	}
-	
+
 	@FunctionalInterface
 	public interface JsTabCompleter {
 		List<String> complete(CommandSender sender, String alias, String[] args);
@@ -25,17 +25,17 @@ public class JsPluginCommand extends Command implements PluginIdentifiableComman
 	 * Plugin that registered this command.
 	 */
 	private final JsPlugin plugin;
-	
+
 	/**
 	 * Command handler JS function.
 	 */
 	private final CommandHandler handler;
-	
+
 	/**
 	 * Tab completion handler.
 	 */
 	private final JsTabCompleter completer;
-	
+
 	public JsPluginCommand(JsPlugin plugin, CommandHandler handler, JsTabCompleter completer,
 			String name, List<String> aliases, String description) {
 		super(name, description, "", aliases);
@@ -46,19 +46,19 @@ public class JsPluginCommand extends Command implements PluginIdentifiableComman
 
 	@Override
 	public Plugin getPlugin() {
-		return plugin;
+		return plugin.getPlugin();
 	}
 
 	@Override
 	public boolean execute(CommandSender sender, String alias, String[] args) {
 		return handler.handle(sender, alias, args);
 	}
-	
+
 	@Override
 	public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
 		return completer.complete(sender, alias, args);
 	}
-	
+
 	public void unload(CommandMap commandMap) {
 		// Remove all aliases of the command (including plugin prefixes)
 		Map<String, Command> knownCommands = commandMap.getKnownCommands();

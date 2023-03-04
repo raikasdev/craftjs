@@ -13,15 +13,15 @@ import fi.valtakausi.craftjs.plugin.JsPlugin;
 public class DelegatingContext extends CraftJsContext {
 
 	private final CraftJsContext delegate;
-	
+
 	public DelegatingContext(CraftJsMain craftjs, JsPlugin plugin, CraftJsContext delegate) {
 		super(craftjs, plugin);
 		this.delegate = delegate;
 	}
-	
+
 	@Override
 	public Value eval(String code, String name) {
-		return delegate.eval(code, plugin.getName(), name);
+		return delegate.eval(code, plugin.getPluginMeta().getName(), name);
 	}
 
 }

@@ -22,14 +22,14 @@ import com.google.gson.JsonSyntaxException;
 
 import fi.valtakausi.craftjs.CraftJsMain;
 
-public class JsPluginLoader implements PluginLoader {
-		
+public class JsPluginLoader {
+
 	private final CraftJsMain craftjs;
-	
+
 	public JsPluginLoader(CraftJsMain craftjs) {
 		this.craftjs = craftjs;
 	}
-	
+
 	public boolean isJsPlugin(Path pluginPath) {
 		if (Files.isDirectory(pluginPath)) {
 			// If package.json is present, this is probably JS plugin
@@ -38,7 +38,7 @@ public class JsPluginLoader implements PluginLoader {
 		}
 		return false; // TODO plugin bundles
 	}
-	
+
 	private Path getRootDir(Path pluginPath) {
 		if (Files.isDirectory(pluginPath)) {
 			return pluginPath;
@@ -46,16 +46,15 @@ public class JsPluginLoader implements PluginLoader {
 			throw new UnsupportedOperationException("js plugin bundle");
 		}
 	}
-	
+
 	private PackageJson loadManifest(Path path) throws JsonSyntaxException, IOException {
 		return PackageJson.load(Files.readString(path));
 	}
-	
-	@Override
+
 	public JsPlugin loadPlugin(File file) throws InvalidPluginException, UnknownDependencyException {
 		return loadPlugin(file.toPath());
 	}
-	
+
 	public JsPlugin loadPlugin(Path path) throws InvalidPluginException, UnknownDependencyException {
 		if (!Files.exists(path)) {
 			throw new InvalidPluginException("missing plugin: " + path);
@@ -69,11 +68,11 @@ public class JsPluginLoader implements PluginLoader {
 			throw new InvalidPluginException("loading package.json failed", e);
 		}
 		boolean internalApis = manifest._internalApis != null && manifest._internalApis;
-		JsPlugin plugin = new JsPlugin(craftjs, path, rootDir, manifest.main, dataDir, manifest.name, manifest.version, internalApis);
+		JsPlugin plugin = new JsPlugin(craftjs, path, rootDir, manifest.main, dataDir, manifest.name, manifest.version,
+				internalApis);
 		return plugin;
 	}
 
-	@Override
 	public PluginDescriptionFile getPluginDescription(File file) throws InvalidDescriptionException {
 		PackageJson manifest;
 		try {
@@ -84,21 +83,18 @@ public class JsPluginLoader implements PluginLoader {
 		return new PluginDescriptionFile(manifest.name, manifest.version, "");
 	}
 
-	@Override
 	public Pattern[] getPluginFileFilters() {
 		// This plugin loader is registered AFTER all plugins have been loaded
 		// We'll need to find and load JS plugins ourself
 		return new Pattern[0];
 	}
 
-	@Override
 	public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener,
 			Plugin plugin) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public void enablePlugin(Plugin plugin) {
 		if (!(plugin instanceof JsPlugin)) {
 			throw new IllegalArgumentException("not a JS plugin");
@@ -106,7 +102,6 @@ public class JsPluginLoader implements PluginLoader {
 		((JsPlugin) plugin).setEnabled(true);
 	}
 
-	@Override
 	public void disablePlugin(Plugin plugin) {
 		if (!(plugin instanceof JsPlugin)) {
 			throw new IllegalArgumentException("not a JS plugin");

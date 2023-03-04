@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.EventExecutor;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Source;
@@ -38,51 +38,54 @@ import fi.valtakausi.craftjs.plugin.JsPluginCommand.JsTabCompleter;
  *
  */
 public class CraftJsContext {
-	
-	private static final Listener EVENT_LISTENER = new Listener() {};
 	private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-		
+
 	/**
 	 * The JS plugin instance.
 	 */
 	public final JsPlugin plugin;
-	
+
 	/**
 	 * CraftJS version.
 	 */
 	public final String version;
-	
+
 	/**
 	 * Plugin root of our {@link #plugin}.
 	 */
 	public final Path pluginRoot;
-	
+
 	/**
 	 * Logger exposed to JS plugin.
 	 */
 	public final JsLogger logger;
-	
+
 	/**
 	 * CraftJS plugin instance.
 	 */
 	private final CraftJsMain craftjs;
-	
+
 	/**
 	 * Current GraalJS context.
 	 */
 	private Context context;
-	
+
 	/**
 	 * Registered commands. Unlike event handlers, these need to be
 	 * unregistered by us when context is destroyed.
 	 */
 	private final List<JsPluginCommand> commands;
-	
+
 	/**
 	 * Opened databases.
 	 */
 	private final Map<String, Database> databases;
-	
+
+	/*
+	 * Tasks being run
+	 */
+	private final List<Integer> tasks;
+
 	public CraftJsContext(CraftJsMain craftjs, JsPlugin plugin) {
 		this.plugin = plugin;
 		this.version = craftjs.getDescription().getVersion();
@@ -90,9 +93,10 @@ public class CraftJsContext {
 		this.logger = new JsLogger(plugin);
 		this.craftjs = craftjs;
 		this.commands = new ArrayList<>();
+		this.tasks = new ArrayList<>();
 		this.databases = new HashMap<>();
 	}
-	
+
 	public void initGraalContext() {
 		if (context != null) {
 			throw new IllegalStateException("context already exists");
@@ -103,7 +107,7 @@ public class CraftJsContext {
 		context.getBindings("js").putMember("__craftjs", this);
 		eval("globalThis.log = __craftjs.logger;", "logger-patch");
 	}
-	
+
 	public void destroyGraalContext() {
 		if (context == null) {
 			throw new IllegalStateException("context does not exist");
@@ -113,21 +117,22 @@ public class CraftJsContext {
 			command.unload(Bukkit.getCommandMap());
 		}
 		commands.clear();
-		
+
 		// Close databases
 		for (Database db : databases.values()) {
 			db.close();
 		}
 		databases.clear();
-		
+
 		context.getEngine().close();
 		context.close();
 		context = null;
 		// Leaks memory, probably due to https://github.com/oracle/graaljs/issues/384
 	}
-	
+
 	/**
 	 * Gets root directory of a plugin.
+	 * 
 	 * @param name Plugin name.
 	 * @return Root directory.
 	 * @see #pluginRoot
@@ -138,17 +143,18 @@ public class CraftJsContext {
 		}
 		return craftjs.getJsPluginManager().getPlugin(name).getRootDir();
 	}
-	
+
 	/**
 	 * Evaluates code in context of this plugin.
+	 * 
 	 * @param code JS code.
 	 * @param name Source (file) name.
 	 * @return Return value of the code.
 	 */
 	public Value eval(String code, String name) {
-		return eval(code, plugin.getName(), name);
+		return eval(code, plugin.getPluginMeta().getName(), name);
 	}
-		
+
 	protected Value eval(String code, String plugin, String name) {
 		if (context == null) {
 			throw new IllegalStateException("context not initialized");
@@ -156,9 +162,10 @@ public class CraftJsContext {
 		Source src = Source.newBuilder("js", code, plugin + ":" + name).buildLiteral();
 		return context.eval(src);
 	}
-	
+
 	/**
 	 * Calls a function in global scope.
+	 * 
 	 * @param func Function name.
 	 * @param args Arguments.
 	 * @return Return value.
@@ -170,76 +177,107 @@ public class CraftJsContext {
 		Value bind = context.getBindings("js");
 		return bind.getMember(func).execute(args);
 	}
-	
+
 	/**
 	 * Schedules a task once.
-	 * @param task Task to run.
+	 * 
+	 * @param task  Task to run.
 	 * @param delay Delay in ticks.
 	 * @return Id of new task.
 	 */
 	public int scheduleOnce(Runnable task, long delay) {
 		if (delay == 0) {
-			return Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, task);
+			int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin.getPlugin(), task);
+			tasks.add(taskId);
+			return taskId;
 		} else {
-			return Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, task, delay);
+			int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin.getPlugin(), task, delay);
+			tasks.add(taskId);
+			return taskId;
 		}
 	}
-	
+
 	/**
 	 * Schedules a repeating task.
-	 * @param task Task to run.
-	 * @param delay Initial delay.
+	 * 
+	 * @param task   Task to run.
+	 * @param delay  Initial delay.
 	 * @param period Time between executions.
 	 * @return Id of new task.
 	 */
 	public int scheduleRepeating(Runnable task, long delay, long period) {
-		return Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, task, delay, period);
+		int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin.getPlugin(), task, delay, period);
+		tasks.add(taskId);
+		return taskId;
 	}
-	
+
+	/**
+	 * Cancels all tasks (on disable)
+	 */
+	public void cancelTasks() {
+		tasks.forEach((taskId) -> {
+			Bukkit.getScheduler().cancelTask(taskId);
+		});
+	}
+
 	/**
 	 * Registers an event handler.
-	 * @param event Event type.
-	 * @param priority Event priority.
+	 * 
+	 * @param event           Event type.
+	 * @param priority        Event priority.
 	 * @param handler
 	 * @param ignoreCancelled
 	 */
-	public void registerEvent(Class<? extends Event> event, EventPriority priority, EventExecutor handler, boolean ignoreCancelled) {
-		Bukkit.getPluginManager().registerEvent(event, EVENT_LISTENER, priority, handler, plugin, ignoreCancelled);
+	public void registerEvent(Class<? extends Event> event, EventPriority priority, EventExecutor handler,
+			boolean ignoreCancelled) {
+		Bukkit.getPluginManager().registerEvent(event, plugin.getListener(), priority, handler, plugin.getPlugin(),
+				ignoreCancelled);
 	}
-	
+
+	/**
+	 * Unregisters events (on disable)
+	 */
+	public void unregisterEvents() {
+		HandlerList.unregisterAll(plugin.getListener());
+	}
+
 	/**
 	 * Registers a command handler.
-	 * @param handler Command handler function.
-	 * @param completer Tab completer function.
-	 * @param name Primary command name.
-	 * @param aliases Command aliases (secondary names).
+	 * 
+	 * @param handler     Command handler function.
+	 * @param completer   Tab completer function.
+	 * @param name        Primary command name.
+	 * @param aliases     Command aliases (secondary names).
 	 * @param description Command description.
 	 */
-	public void registerCommand(CommandHandler handler, JsTabCompleter completer, String name, List<String> aliases, String description) {
+	public void registerCommand(CommandHandler handler, JsTabCompleter completer, String name, List<String> aliases,
+			String description) {
 		JsPluginCommand command = new JsPluginCommand(plugin, handler, completer, name, aliases, description);
-		Bukkit.getCommandMap().register(plugin.getName().toLowerCase(), command); // Register to global command map
+		Bukkit.getCommandMap().register(plugin.getPluginMeta().getName().toLowerCase(), command); // Register to global
+																																															// command map
 		commands.add(command); // Queue to be unloaded when this is destroyed
 	}
-	
+
 	/**
 	 * Opens a database for this plugin with given name, or returns a
 	 * previously opened one.
+	 * 
 	 * @param name Database name.
 	 * @return A database.
 	 */
 	public Database openDatabase(String name) throws IOException {
 		if (!databases.containsKey(name)) {
-			Path path = craftjs.getDatabaseDir().resolve(plugin.getName()).resolve(name + ".db");
+			Path path = craftjs.getDatabaseDir().resolve(plugin.getPluginMeta().getName()).resolve(name + ".db");
 			Files.createDirectories(path.getParent());
 			databases.put(name, new Database(path));
 		}
 		return databases.get(name);
 	}
-	
+
 	private void runSync(Runnable task) {
-		Bukkit.getScheduler().runTask(plugin, task);
+		Bukkit.getScheduler().runTask(plugin.getPlugin(), task);
 	}
-	
+
 	public Thenable fetch(String uri, String method, String payload, String[] headers) {
 		// Prepare request
 		BodyPublisher body = payload != null ? BodyPublishers.ofString(payload) : BodyPublishers.noBody();
@@ -250,7 +288,7 @@ public class CraftJsContext {
 			builder = builder.headers(headers);
 		}
 		HttpRequest request = builder.build();
-		
+
 		// Return JS object that can be used for creating a promise
 		// We're collecting entire response body to string before resolving
 		// In future, headers should be made available before body is awaited
@@ -266,12 +304,13 @@ public class CraftJsContext {
 					});
 		};
 	}
-	
+
 	public boolean packageExists(String name) {
 		return craftjs.getPackageLookup().exists(name);
 	}
-	
-	public void openWebSocket(String address, Map<String, String> httpHeaders, Consumer<WebSocketHandle> success, Consumer<Exception> failure) {
+
+	public void openWebSocket(String address, Map<String, String> httpHeaders, Consumer<WebSocketHandle> success,
+			Consumer<Exception> failure) {
 		URI uri = URI.create(address);
 		WebSocketHandle handle = new WebSocketHandle(plugin, uri, httpHeaders, success, failure);
 		handle.connect();
