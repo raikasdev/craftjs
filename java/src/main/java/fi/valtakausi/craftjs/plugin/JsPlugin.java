@@ -1,12 +1,10 @@
 package fi.valtakausi.craftjs.plugin;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
@@ -21,16 +19,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.plugin.PluginBase;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginLogger;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import fi.valtakausi.craftjs.CraftJsMain;
 import fi.valtakausi.craftjs.api.CraftJsContext;
 import io.papermc.paper.plugin.configuration.PluginMeta;
-import net.kyori.adventure.text.TextComponent;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,13 +39,8 @@ public class JsPlugin {
 		// Root dir is inside CraftJS jar, or override directory (for development)
 		Path rootDir = craftjs.getInternalPlugin("craftjs-core");
 		return new JsPlugin(craftjs, jarPath, rootDir, "index.js",
-				dataDir, "craftjs-core", craftjs.getDescription().getVersion(), false);
+				dataDir, "craftjs-core", craftjs.getPluginMeta().getVersion(), false);
 	}
-
-	/**
-	 * Loader of this plugin.
-	 */
-	private final JsPluginLoader loader;
 
 	/**
 	 * Path to plugin file or directory.
@@ -72,16 +62,6 @@ public class JsPlugin {
 	 * Plugin data directory.
 	 */
 	private final Path dataDir;
-
-	/**
-	 * Plugin name.
-	 */
-	private final String name;
-
-	/**
-	 * Version string.
-	 */
-	private final String version;
 
 	/**
 	 * Logger of this plugin
@@ -130,13 +110,10 @@ public class JsPlugin {
 		}
 		this.craftjs = craftjs;
 
-		this.loader = craftjs.getJsLoader();
 		this.pluginPath = pluginFile;
 		this.rootDir = rootDir;
 		this.entrypoint = entrypoint;
 		this.dataDir = dataDir;
-		this.name = name;
-		this.version = version;
 		this.logger = new PluginLogger(craftjs);
 		this.context = new CraftJsContext(craftjs, this);
 		this.internalApis = internalApis;
@@ -286,16 +263,5 @@ public class JsPlugin {
 
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		return false; // Handled per-command basis
-	}
-
-	public final void init(@NotNull PluginLoader loader, @NotNull Server server,
-			@NotNull PluginDescriptionFile description, @NotNull File dataFolder, @NotNull File file,
-			@NotNull ClassLoader classLoader) {
-		return;
-	}
-
-	public final void init(@NotNull Server server, @NotNull PluginDescriptionFile description, @NotNull File dataFolder,
-			@NotNull File file, @NotNull ClassLoader classLoader, PluginMeta configuration) {
-		return;
 	}
 }
