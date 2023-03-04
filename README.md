@@ -1,5 +1,5 @@
-# CraftJS
-CraftJS is a Bukkit plugin that adds support for writing plugins in TypeScript
+# CraftJS (raikas' fork)
+CraftJS is a PaperMC plugin that adds support for writing plugins in TypeScript
 and JavaScript.
 
 ## Current status
@@ -7,9 +7,9 @@ CraftJS is in early development and has little documentation aside of the
 JS/Javadocs. No guarantees about API stability are provided.
 
 ## Requirements
-* Paper (Minecraft 1.17)
-  * Spigot would likely be trivial, will be considered later
-* GraalVM 21.1 (Java 16 version)
+* Paper (Minecraft 1.19.3)
+  * Spigot does not work. PaperMC or Purpur recommended.
+* GraalVM 22.3 (Java 17 version)
   * Older known not to work, newer versions *might* be ok
 
 ## Usage
