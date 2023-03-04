@@ -88,7 +88,7 @@ public class CraftJsContext {
 
 	public CraftJsContext(CraftJsMain craftjs, JsPlugin plugin) {
 		this.plugin = plugin;
-		this.version = craftjs.getDescription().getVersion();
+		this.version = craftjs.getPluginMeta().getVersion();
 		this.pluginRoot = plugin.getRootDir();
 		this.logger = new JsLogger(plugin);
 		this.craftjs = craftjs;
