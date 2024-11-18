@@ -28,20 +28,18 @@
     </repository>
   </repositories>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>tuonetar-releases</id>
-      <name>Ilari's Project Repository</name>
-      <url>https://maven.lhf.blue/releases</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <dependencies>
     <dependency>
-      <groupId>org.graalvm.sdk</groupId>
-      <artifactId>graal-sdk</artifactId>
-      <version>22.3.1</version>
-      <scope>provided</scope>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>polyglot</artifactId>
+      <version>24.0.2</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+        <groupId>org.graalvm.polyglot</groupId>
+        <artifactId>js-community</artifactId>
+        <version>24.0.2</version>
+        <type>pom</type>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
@@ -51,7 +49,7 @@
     <dependency>
       <groupId>io.papermc.paper</groupId>
       <artifactId>paper-api</artifactId>
-      <version>1.19.3-R0.1-SNAPSHOT</version>
+      <version>1.21.1-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -103,19 +101,24 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>blue.lhf</groupId>
-        <artifactId>run-paper-maven-plugin</artifactId>
-        <version>1.0.2</version>
         <configuration>
-          <minecraftVersion>1.19.3</minecraftVersion>
-          <acceptEula>true</acceptEula>
-          <serverDirectory>run</serverDirectory>
-          <jvmFlags>
-            <flag>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:6969</flag>
-          </jvmFlags>
-        </configuration>
+          <transformers>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <mainClass>fi.valtakausi.craftjs.Main</mainClass>
+              </transformer>
+          </transformers>
+          <filters>
+              <filter>
+                  <artifact>*:*:*:*</artifact>
+                  <excludes>
+                      <exclude>META-INF/*.SF</exclude>
+                      <exclude>META-INF/*.DSA</exclude>
+                      <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+              </filter>
+          </filters>
+      </configuration>
       </plugin>
     </plugins>
   </build>

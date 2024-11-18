@@ -73,10 +73,11 @@ export function translate(
   key: string,
   ...args: string[]
 ): TranslatableComponent {
-  return Component.translatable()
-    .key(key)
-    .args(args.map((arg) => Component.text(arg)))
-    .build();
+  return (
+    Component.translatable()
+      .key(key)
+      .args(args.map((arg) => Component.text(arg))) as any
+  ).build();
 }
 
 /**

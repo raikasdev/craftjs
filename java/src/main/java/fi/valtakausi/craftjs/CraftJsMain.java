@@ -39,7 +39,7 @@ public class CraftJsMain extends JavaPlugin {
 				.allowExperimentalOptions(true)
 				.option("js.foreign-object-prototype", "true") // Java List - JS array compatibility
 				.option("js.nashorn-compat", "true") // For native JS getter/setter compatibility
-				.option("js.ecmascript-version", "2021"); // Nashorn compat might default to old JS version
+				.option("js.ecmascript-version", "2023"); // Nashorn compat might default to old JS version
 	}
 
 	/**

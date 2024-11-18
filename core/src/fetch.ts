@@ -1,4 +1,7 @@
+import { Bukkit } from 'org.bukkit';
 import { HttpHeaders, HttpResponse } from 'java.net.http';
+import { component } from './chat';
+import { Component } from 'net.kyori.adventure.text';
 
 class HeadersImpl implements Headers {
   map: Map<string, string[]>;
@@ -62,6 +65,10 @@ class HeadersImpl implements Headers {
     for (const key of this.map.keys()) {
       callbackfn(this.get(key) as string, key, thisArg ?? this);
     }
+  }
+
+  getSetCookie(): string[] {
+    return [];
   }
 }
 globalThis.Headers = HeadersImpl;
@@ -132,9 +139,12 @@ class ResponseImpl implements Response, Body {
 (globalThis as any).Response = ResponseImpl;
 
 async function fetch(
-  input: RequestInfo,
+  input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
+  if (input instanceof URL) {
+    input = input.toString();
+  }
   if (typeof input != 'string') {
     throw new Error('request as input not implemented');
   }

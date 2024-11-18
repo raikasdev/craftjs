@@ -12,13 +12,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@craftjs-types/java.base": "^16.0.1-62a175c",
+    "@craftjs-types/java.net.http": "^16.0.1-62a175c",
     "fast-deep-equal": "^3.1.3",
     "vlq": "^1.0.1"
   },
   "devDependencies": {
-    "@craftjs-types/java.base": "latest",
-    "@craftjs-types/java.net.http": "latest",
-    "@craftjs-types/paper": "latest",
+    "@craftjs-typings/java.base": "^21.0.4-patch25",
+    "@craftjs-typings/java.net.http": "^21.0.4-patch25",
+    "@craftjs-typings/paper": "^1.21.3-patch25",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.25.0",

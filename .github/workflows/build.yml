@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: zulu
-          java-version: 16
+          java-version: 22
       - name: Build CraftJS
         run: |
           npm install --prefix=core
@@ -26,21 +26,19 @@ jobs:
     runs-on: ubuntu-20.04
     needs: build
     steps:
-      - uses: DeLaGuardo/setup-graalvm@master
+      - uses: graalvm/setup-graalvm@v1
         with:
-          graalvm: '22.3.1'
-          java: java17
-          arch: amd64
+          java-version: 22
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v2
         with:
           name: craftjs.jar
-      - name: Install JS support
-        run: gu install js
       - name: Setup server
         run: |
           mkdir plugins
           mv craftjs.jar plugins
-          wget -c https://papermc.io/api/v2/projects/paper/versions/1.19.3/builds/384/downloads/paper-1.19.3-384.jar -O paper.jar
+          wget -c https://papermc.io/api/v2/projects/paper/versions/1.21.1/builds/131/downloads/paper-1.21.1-131.jar -O paper.jar
       - name: Run tests
         run: |
           java -Dcom.mojang.eula.agree=true -Dcraftjs.runTests=craftjs-internal -jar paper.jar

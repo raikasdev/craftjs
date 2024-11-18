@@ -13,8 +13,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@craftjs-types/java.base": "latest",
-    "@craftjs-types/paper": "latest",
+    "@craftjs-typings/java.base": "^21.0.4-patch25",
+    "@craftjs-typings/paper": "^1.21.3-patch25",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "craftjs-plugin": "file:../core/types",
@@ -23,5 +23,8 @@
     "eslint-plugin-prettier": "^3.4.0",
     "prettier": "^2.2.1",
     "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "@craftjs-typings/java.net.http": "^21.0.4-patch25"
   }
 }
