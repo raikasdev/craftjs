@@ -1,3 +1,7 @@
+# 1.0.6
+
+Type translator (java-ts-bind) has been replaced by new java-ts-generator. Plugin has been updated to support PaperMC 1.21.3.
+
 # 1.0.5
 
 **Breaking *technical* changes!**

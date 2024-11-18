@@ -1,9 +1,4 @@
 name: CraftJS
-version: "1.0"
+version: "1.0.6"
 main: fi.valtakausi.craftjs.CraftJsMain
-api-version: "1.19"
-dependencies:
-  - name: RealisticSeasons
-    required: false
-load-after:
-  - name: RealisticSeasons
+api-version: "1.21"
