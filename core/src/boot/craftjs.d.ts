@@ -145,6 +145,11 @@ declare global {
      */
     packageExists(name: string): boolean;
 
+    /**
+     * Allows you to specify libraries that can be imported even when not in classpath
+     */
+    allowedPackages?: string[];
+
     openWebSocket(
       address: string,
       httpHeaders: Map<string, string>,

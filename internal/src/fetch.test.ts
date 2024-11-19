@@ -1,4 +1,4 @@
-import { test } from 'craftjs-plugin';
+import { test } from '@craftjs-typings/core';
 
 test('fetch polyfill', async (t) => {
   const json = await (

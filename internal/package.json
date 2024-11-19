@@ -17,7 +17,7 @@
     "@craftjs-typings/paper": "^1.21.3-patch25",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
-    "craftjs-plugin": "file:../core/types",
+    "@craftjs-typings/core": "file:../core/types",
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^8.2.0",
     "eslint-plugin-prettier": "^3.4.0",

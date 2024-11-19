@@ -70,6 +70,8 @@ public class CraftJsContext {
 	 */
 	private Context context;
 
+	public List<String> allowedPackages;
+
 	/**
 	 * Registered commands. Unlike event handlers, these need to be
 	 * unregistered by us when context is destroyed.
@@ -95,6 +97,7 @@ public class CraftJsContext {
 		this.commands = new ArrayList<>();
 		this.tasks = new ArrayList<>();
 		this.databases = new HashMap<>();
+		this.allowedPackages = new ArrayList<>();
 	}
 
 	public void initGraalContext() {

@@ -1,5 +1,5 @@
-import { test } from 'craftjs-plugin';
-import { WebSocket } from 'craftjs-plugin/websocket';
+import { test } from '@craftjs-typings/core';
+import { WebSocket } from '@craftjs-typings/core/websocket';
 
 test('websocket echo', async (t) => {
   const ws = await WebSocket.open('wss://echo.websocket.org');

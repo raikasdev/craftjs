@@ -1,4 +1,4 @@
-import { test } from 'craftjs-plugin';
+import { test } from '@craftjs-typings/core';
 import { System } from 'java.lang';
 import { Bukkit } from 'org.bukkit';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';

@@ -1,4 +1,4 @@
-import { Database, Table, test } from 'craftjs-plugin';
+import { Database, Table, test } from '@craftjs-typings/core';
 
 const db = new Database('integration_test');
 

@@ -15,7 +15,7 @@ JS/Javadocs. No guarantees about API stability are provided.
 ## Usage
 Tutorials for creating CraftJS plugins will come later. For now, see 'internal'
 for a JS plugin example. If you copy the package.json from there, make sure to
-change dependency 'craftjs-plugin' to latest version from npm.
+change dependency '@craftjs-typings/core' to latest version from npm.
 
 To install CraftJS, just copy the jar file to your plugins folder.
 
@@ -37,7 +37,7 @@ JavaScript is executed with [GraalJS](https://github.com/oracle/graaljs), which
 
 TypeScript types are [generated](https://github.com/bensku/java-ts-bind)
 automatically from Java source code and include Javadoc. They are available
-on npm as 'craftjs-plugin'.
+on npm as '@craftjs-typings/core'.
 
 ### Components
 CraftJS consists of the following components that can be found in directories

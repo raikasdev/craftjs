@@ -1,4 +1,4 @@
-import { test } from 'craftjs-plugin';
+import { test } from '@craftjs-typings/core';
 import { IllegalArgumentException } from 'java.lang';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function

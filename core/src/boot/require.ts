@@ -35,9 +35,12 @@ function resolvePackage(name: string): JavaPackage | null {
   // Check if the package actually exists
   // Iterating GraalJS packages produces empty packages when it doesn't
   // FIXME figure out why we STILL need special case for Adventure chat
+  // Well it's not getting loaded :) it's a library
+  // packageExists can only access classes that have been loaded to classpath
   if (
     !__craftjs.packageExists(name) &&
-    !name.startsWith('net.kyori.adventure')
+    !name.startsWith('net.kyori.adventure') &&
+    !__craftjs.allowedPackages?.some((pkg) => name.startsWith(pkg))
   ) {
     return null;
   }
@@ -149,9 +152,9 @@ function __require(
   bypassCache = false,
 ): any {
   // Special case for CraftJS core (it is installed to globals by Java code)
-  if (id.startsWith('craftjs-plugin')) {
+  if (id.startsWith('@craftjs-typings/core')) {
     let module = __craftjscore;
-    for (const name of id.split('/').slice(1)) {
+    for (const name of id.split('/').slice(2)) {
       module = module[name];
     }
     return module;
@@ -254,7 +257,7 @@ function __coreEntrypoint(): boolean {
   try {
     (globalThis as any).__craftjscore = require('./index');
   } catch (e) {
-    logError(e, 'Critical: Failed to load CraftJS core');
+    logError(e as Error, 'Critical: Failed to load CraftJS core');
     return true;
   }
   return false;
@@ -270,7 +273,7 @@ function __pluginEntrypoint(entrypoint: string): boolean {
     (globalThis as any).currentPlugin = __craftjs.plugin;
     require(entrypoint);
   } catch (e) {
-    logError(e, `Failed to load the entrypoint: ${entrypoint}`);
+    logError(e as Error, `Failed to load the entrypoint: ${entrypoint}`);
     return true;
   }
   return false;

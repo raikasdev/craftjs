@@ -1,4 +1,4 @@
-import { test } from 'craftjs-plugin';
+import { test } from '@craftjs-typings/core';
 import {
   clickEvent,
   color,
@@ -6,7 +6,7 @@ import {
   text,
   tooltip,
   translate,
-} from 'craftjs-plugin/chat';
+} from '@craftjs-typings/core/chat';
 import { Component } from 'net.kyori.adventure.text';
 import { ClickEvent, HoverEvent } from 'net.kyori.adventure.text.event';
 import { Action as ClickAction } from 'net.kyori.adventure.text.event.ClickEvent';
